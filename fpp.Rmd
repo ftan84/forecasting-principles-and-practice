@@ -1,7 +1,10 @@
 ---
-title: "[Forecasting Notes](https://www.otexts.org/fpp/1)"
+title: "[\"Forecasting: Principles and Practice\" Notes](https://www.otexts.org/fpp/1)"
 author: "Francis Tan"
 date: "2016-08-31"
+output:
+    pdf_document:
+        toc: true
 ---
 
 ```{r include=FALSE}
@@ -9,6 +12,7 @@ require(fpp)
 # Load the data
 ```
 
+\newpage
 Chapter 1: Getting Started
 ==========================
 
@@ -27,6 +31,7 @@ example, predict the house price based on number of bedrooms, bathrooms, etc.
 5. Using and Evaluating Model
 
 
+\newpage
 Chapter 2: Forecaster's Toolbox
 ===============================
 
@@ -44,9 +49,17 @@ plot(melsyd[,"Economy.Class"],
   main="Economy class passengers: Melbourne-Sydney",
   xlab="Year",ylab="Thousands")
 ```
-##### Notes
+
+Notes:
+
 - Missing data in 1989 -- industrial dispute
 - Dip in 1992 -- trial which replaced some economy class seats with business
 class
 - Large increase in 1991
 - etc
+
+#### Example 2
+```{r}
+data(a10)
+plot(a10, ylab="$ million", xlab="Year", main="Antidiabetic drug sales")
+```
