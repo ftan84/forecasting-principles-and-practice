@@ -63,3 +63,8 @@ class
 data(a10)
 plot(a10, ylab="$ million", xlab="Year", main="Antidiabetic drug sales")
 ```
+
+Notes:
+
+- Seasonality
+- Upward trend
