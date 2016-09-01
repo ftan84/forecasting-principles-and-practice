@@ -67,3 +67,8 @@ Notes:
 
 - Seasonality
 - Upward trend
+
+#### Common Time Series Patterns
+- **Trend**
+- **Seasonality**
+- **Cycles** -- rises and falls that are not of a fixed period
