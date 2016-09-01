@@ -1,0 +1,52 @@
+---
+title: "[Forecasting Notes](https://www.otexts.org/fpp/1)"
+author: "Francis Tan"
+date: "2016-08-31"
+---
+
+```{r include=FALSE}
+require(fpp)
+# Load the data
+```
+
+Chapter 1: Getting Started
+==========================
+
+## Types of Quantitative Forecasts
+- Cross-sectional Data
+	- Given a set of parameters, try to _predict_ an outcome based on data. For
+example, predict the house price based on number of bedrooms, bathrooms, etc.
+- Time series Data
+	- Forecast future outcome based on historical data
+
+## Basic Steps of Forecasting
+1. Problem Definition
+2. Gathering Information
+3. Exploratory Analysis
+4. Choosing and Fitting Models
+5. Using and Evaluating Model
+
+
+Chapter 2: Forecaster's Toolbox
+===============================
+
+## Graphs
+First thing to do for any forecasting exercise is to plot the data to look for
+patterns or any abnormalities.
+
+### Time Plots
+aka Line graphs.
+
+#### Example 1
+```{r}
+data(melsyd)
+plot(melsyd[,"Economy.Class"], 
+  main="Economy class passengers: Melbourne-Sydney",
+  xlab="Year",ylab="Thousands")
+```
+##### Notes
+- Missing data in 1989 -- industrial dispute
+- Dip in 1992 -- trial which replaced some economy class seats with business
+class
+- Large increase in 1991
+- etc
