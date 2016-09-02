@@ -5,6 +5,7 @@ date: "2016-08-31"
 output:
     pdf_document:
         toc: true
+        highlight: zenburn
 ---
 
 ```{r include=FALSE}
@@ -72,3 +73,144 @@ Notes:
 - **Trend**
 - **Seasonality**
 - **Cycles** -- rises and falls that are not of a fixed period
+
+### Seasonal Plots
+Line plots comparing each _season_.
+
+```{r fig.height=10}
+seasonplot(a10,
+           ylab='$ million',
+           xlab='Year',
+           main='Seasonal plot: antidiabetic drug sales',
+           year.labels=TRUE,
+           year.labels.left=TRUE,
+           col=1:20,
+           pch=19)
+```
+
+```{r}
+monthplot(a10,
+          ylab='$ million',
+          xlab='Month',
+          main='Seasonal deviation plot: antidiabetic drug sales')
+```
+
+### Scatterplots
+Useful for analyzing cross-sectional data
+
+## Summary Statistics
+
+### Univariate statistics
+Can simply use _summary_ function on the data.
+
+### Bivariate statistics
+**Correlation coefficient**: $r$
+$$
+r = \frac{\sum{} (x_i - \overline{x})(y_i - \overline{y})}
+         {\sqrt{\sum{(x_i - \overline{x})^2}}\sqrt{\sum{(y_i - \overline{y})^2}}}
+$$
+
+### Autocorrelation
+Used to test correlation on lag. $r_1$ tests correlation on lag 1, $r_2$ tests
+correlation on lag 2, etc.
+
+```{r}
+data(ausbeer)
+beer <- window(ausbeer, start=1992, end=2006-0.1)
+lag.plot(beer, lags=9, do.lines=FALSE)
+```
+
+Each lag has a corresponding correlation value $r$. These correlation values
+are plotted to form an _autocorrelation function_ or _ACF_. The plot is known
+as a _correlogram_.
+
+```{r}
+acf(beer)
+```
+
+Notes:
+
+- $r_4$ at lag 4 has the highest correlation because seasonal patterns happen
+  every four quarters
+- Negative correlations happen two quarters after peaks
+
+Time series that show no autocorrelation are called _white noise_.Acf plot will
+show no significant correlations for any lag periods.
+
+## Transformations
+
+Log and power transformations are common. _Box-Cox Transformations_ is a useful
+family of log and power transformations. If the coefficient $\lambda$ is 0, it
+does a natural log, otherwise it does a power transformation. $\lambda$ can be
+between 0 and 1. A good lambda will transform the data such that each seasonal
+swing is roughly equal. Running the function _BoxCox.lambda(data)_ will choose
+a $\lambda$ for you. In this case, it will choose $0.27$.
+
+```{r}
+data(elec)
+par(mfrow=c(2, 2))
+plot(elec, main='Original plot of electricity demand')
+plot(BoxCox(elec, 0), main=expression(paste(lambda, ' = 0')))
+plot(BoxCox(elec, 0.25), main=expression(paste(lambda, ' = 0.25')))
+plot(BoxCox(elec, 0.5), main=expression(paste(lambda, ' = 0.5')))
+```
+
+After tranforming, we need to make a forecast on the transformed data. Then we
+need to _back transform_ to obtain the forecast in the original scale.
+
+## Evaluating forecast accuracy
+
+### Scale-dependent errors
+
+Forecast error is simply $e_i = y_i - \hat{y_i}$ where $y_i$ is actual and
+$\hat{y_i}$ is forecast. Two common measures are:
+
+$$\text{Mean absolute error: MAE} = mean(|e_i|)$$
+$$\text{Root mean squared error: RMSE} = \sqrt{mean(e_i^2)}$$
+
+MAE is most common, however can only be compared to values on the same scale,
+or on the same data set.
+
+### Percentage errors
+
+Scale independent so can compare errors from different data sets. This can be
+calculated as $p_i = 100e_i/y_i$. The most commonly used measure is:
+
+$$\text{Mean absolute percentage error: MAPE} = mean(|p_i|)$$
+
+This can present the problem is any value $y_i$ is 0 or close to 0.
+
+### Scaled errors
+
+Scaled errors are used as an alternative to percentage errors. The _mean
+absolute scaled error_ or _MASE_ is a commonly used one (alternatively _mean
+squared scaled error_ or _MSSE_ is used).
+
+### Example
+
+```{r}
+beer2 <- window(ausbeer,start=1992,end=2006-.1)
+
+beerfit1 <- meanf(beer2,h=11)
+beerfit2 <- rwf(beer2,h=11)
+beerfit3 <- snaive(beer2,h=11)
+
+plot(beerfit1, plot.conf=FALSE,
+  main="Forecasts for quarterly beer production")
+lines(beerfit2$mean,col=2)
+lines(beerfit3$mean,col=3)
+lines(ausbeer)
+legend("topright", lty=1, col=c(4,2,3),
+  legend=c("Mean method","Naive method","Seasonal naive method"))
+```
+
+The following shows the various error tests:
+
+```{r}
+beer3 <- window(ausbeer, start=2006)
+accuracy(beerfit1, beer3)
+accuracy(beerfit2, beer3)
+accuracy(beerfit3, beer3)
+```
+
+Here we see that the seasonal naive method is best.
