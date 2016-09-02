@@ -137,6 +137,15 @@ Notes:
 Time series that show no autocorrelation are called _white noise_.Acf plot will
 show no significant correlations for any lag periods.
 
+## Simple forecasting methods
+
+- **Mean** -- just the mean of historical values for all forecasted values.
+- **Naive** -- just the last actual value for all forecasted values.
+- **Seasonal Naive** -- variation of naive. Uses the last value of some period
+  last season.
+- **Drift** -- variation of naive. Allows forecast to increase or decrease over
+  time (the _drift_) based on average change.
+
 ## Transformations
 
 Log and power transformations are common. _Box-Cox Transformations_ is a useful
@@ -214,3 +223,52 @@ accuracy(beerfit3, beer3)
 ```
 
 Here we see that the seasonal naive method is best.
+
+## Residual diagnostics
+
+Residuals are simply the difference between the forecast and actual value
+$e_i = y_i - \hat{y_i}$. A good forecast will yield residuals with the following
+properties:
+
+- Residuals are uncorrelated. If you find correlations then there was something
+  not included in the forecasting model.
+- Residuals have zero mean. A non-zero mean means forecast is biased.
+
+If the above properties are not satisfied, then forecast can be improved. If
+residuals have a mean $m$, then simply adding $m$ to all forecasts will solve
+the problem. Fixing the correlation problem will be explained in **Chapter 8**.
+
+The following two properties are not required, but useful:
+
+- Residuals have constant variance.
+- Residuals are normally distributed.
+
+### Example: Dow Jones
+
+Naive method is usually best for stocks. Therefore, residuals are simply the
+difference between consecutive observations.
+
+```{r}
+data(dj)
+# par(mfrow=c(4, 1))
+dj2 <- window(dj, end=250)
+plot(dj2,
+     main='Dow Jones Index (daily ending 1994-07-15)',
+     xlab='Day')
+res <- residuals(naive(dj2))
+plot(res,
+     main='Residuals from naive method',
+     xlab='Day')
+Acf(res,
+    main='ACF of residuals')
+hist(res,
+     nclass='FD',
+     main='Histogram of residuals')
+```
+
+Notes:
+
+- [x] Residuals are not correlated.
+- [x] Residuals are close to zero.
+- [x] Residuals have constant variance.
+- [] Not quite normally distributed so prediction intervals may be inaccurate.
