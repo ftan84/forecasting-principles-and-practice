@@ -283,7 +283,7 @@ Notes:
 Test if autocorrelation is the result of white noise.
 [Portmanteau test](https://www.otexts.org/fpp/2/6)
 
-## Simple regression
+# Chapter 4: Simple regression
 
 Fit a line over observations where it minimizes the sum of square errors:
 
@@ -293,7 +293,7 @@ $$
 
 The correlation coefficient $r$ shows how much $x$ predicts $y$.
 
-### Example: Car emission
+## Example: Car emission
 
 ```{r}
 data(fuel)
@@ -306,7 +306,7 @@ abline(fit)
 summary(fit)
 ```
 
-### Evaluating regression models
+## Evaluating regression models
 
 ```{r}
 res <- residuals(fit)
@@ -320,19 +320,19 @@ abline(0, 0)
 We see that there is a U-shaped pattern and therefore a simple linear model
 may not be appropriate.
 
-### Outliers
+## Outliers
 
 An outlier is considered an _influential observation_ if it has a large impact
 on the regression model
 
-### Example: Predicting weight from height
+## Example: Predicting weight from height
 
 Red line is a fit if the outlier is included while the black line is the fit
 if outlier is excluded.
 
 ![Weight vs height](https://www.otexts.org/sites/default/files/resize/fpp/images/fig_4_outliers-570x576.png)
 
-### Goodness of fit
+## Goodness of fit
 
 $R^2$ or the square of the correlation coefficient $r$ measures how well the
 model fits the data. This can be found in the section called
@@ -341,14 +341,14 @@ shows the $R^2$ value to be 0.8244. This means that 82% of the variation is
 captured by the model. Be careful as this is often used incorrectly. As in the
 example above, we see that the residuals have a U-shaped pattern.
 
-### Standard error of regression
+## Standard error of regression
 
 Another measure of how well a model fits is the _Standard error of regression_
 which is the same as the standard deviation of residuals. This can be found in
 the section called _Residual standard error_ in the output of the _summary_
 function. This is also used in calculating the prediction interval.
 
-### Non-linear regression
+## Non-linear regression
 
 ```{r}
 fit <- lm(Carbon ~ City, data=fuel)
@@ -388,9 +388,9 @@ lines(1:50, exp(fit4$coef[1] + fit4$coef[2] * (1:50)), col='green')
 | linear-log | $y=\beta_0+\beta_1 \log x$      |
 | log-linear | $\log y=\beta_0+\beta_1 x$      |
 
-## Chapter 8: ARIMA
+# Chapter 8: ARIMA
 
-### Stationarity and differencing
+## Stationarity and differencing
 Needs to be stationary so need to difference first. Differencing can be one of
 two type:
 
@@ -400,3 +400,193 @@ two type:
 When to difference can be somewhat subjective
 
 ### Unit root tests
+
+One way to see if differencing is require is to use a _unit root test_. These
+are basically unit tests. One popular one is _Augmented Dickey-Fuller (ADF)
+test_.
+
+```{r, eval=FALSE}
+adf.test(x, alternative='stationary')
+```
+
+Null hypothesis is that the data is not stationary. So large p-value (using 5%
+threshold, larger than 0.05 is large) indicates that differencing is required.
+
+A useful R function is `ndiffs()` to find out how many times the data needs to
+be differenced and `nsdiffs()` to find out how many times it needs seasonal
+differencing.
+
+Example:
+
+```{r, eval=FALSE}
+ns <- nsdiffs(x)
+if(ns > 0) {
+  xstar <- diff(x,lag=frequency(x),differences=ns)
+} else {
+  xstar <- x
+}
+nd <- ndiffs(xstar)
+if(nd > 0) {
+  xstar <- diff(xstar,differences=nd)
+}
+```
+
+## Non-seasonal ARIMA models
+
+```{r}
+fit <- auto.arima(usconsumption[,1],seasonal=FALSE)
+fit
+plot(forecast(fit,h=10),include=80)
+```
+
+## Auto ARIMA
+
+The _auto.arima()_ function can be useful but also dangerous. Be wary of the
+following:
+
+- If c=0 and d=0, long-term forecasts will go to zero.
+- If c=0 and d=1, will go to non-zero constant.
+- If c=0 and d=2, will follow straight line.
+- If c!=0 and d=0, will go to mean of data.
+- If c!=0 and d=1, will follow a straight line.
+- If c!=0 and d=2, will follow quadratic trend. 
+
+## ACF and PACF
+
+The ACF and PACF graphs may be helpful in finding the $p$ and $q$ values. If
+data are from a _ARIMA(p, d, 0)_ or _ARIMA(0, d, q)_, then the ACF or PACF can
+be useful.
+
+If the data follows _ARIMA(p, d, 0)_ then the ACF and PACF plots of the
+differenced data will have the following patterns:
+
+- the ACF is exponentially decaying or sinusoidal;
+- there is a significant spike at lag $p$ in PACF but not beyond that
+
+if the data follows _ARIMA(0, d, q)_ then the ACF and PACF plots of the
+differenced data will have the following patterns:
+
+- the PACF is exponentially decaying or sinusoidal;
+- there is a significant spike at lag $q$ in ACF but not beyond that
+
+## ARIMA example (manual method)
+
+Process:
+
+1. Plot data and identify unusual observations and patterns.
+2. If necessary, use Box-Cox transformation to stabilize variance.
+3. Difference the data until stationary. Use unit root test.
+4. Plot ACF/PACF of differenced data to find order.
+5. Try your model along with variations. Minimize the AICc.
+6. Check residuals by plotting the ACF of residuals and conducting a
+   portmanteau test.
+7. If residuals look like white noise, then forecast using model.
+
+![](http://www.otexts.org/sites/default/files/fpp/images/Figure-8-10.png)
+
+### Step 1: Plot data
+
+Here is what the original data looks like.
+
+```{r}
+data(elecequip)
+x <- elecequip
+plot(x)
+```
+
+### Step 2: Box-Cox transformation
+
+Variance looks stable so no need for a Box-Cox transformation.
+
+### Step 3: Differencing
+
+We'll use unit root tests to see if we need to difference.
+
+```{r}
+nsdiffs(x)
+```
+
+Function states we need to seasonaly difference once.
+
+```{r}
+m <- frequency(x)
+x1 <- seasadj(stl(x, s.window='periodic'))
+plot(x1)
+```
+
+Still not stationary. Let's run a first order difference.
+
+```{r}
+x2 <- diff(x1)
+plot(x2)
+```
+
+Better. Final check using unit root test.
+
+```{r}
+nsdiffs(x2)
+ndiffs(x2)
+```
+
+### Step 4: ACF/PACF
+
+```{r}
+tsdisplay(x2)
+```
+ACF is sinusoidal. PACF shows spike up to lag 3. Potential order of c(3, 1, 0).
+Let's try that along with other variations such as:
+
+- c(4, 1, 0)
+- c(2, 1, 0)
+- c(3, 1, 1)
+- c(4, 1, 1)
+- c(2, 1, 1)
+
+### Step 5: Minimize AICc
+
+```{r}
+summary(Arima(x1, order=c(3, 1, 0)))
+summary(Arima(x1, order=c(4, 1, 0)))
+summary(Arima(x1, order=c(2, 1, 0)))
+summary(Arima(x1, order=c(3, 1, 1)))
+summary(Arima(x1, order=c(4, 1, 1)))
+summary(Arima(x1, order=c(2, 1, 1)))
+```
+
+Looks like order (3, 1, 1) has the smallest AICc of 978.49.
+
+```{r}
+fit <- Arima(x1, order=c(3, 1, 1))
+```
+
+### Step 6: Check residuals
+
+```{r}
+Acf(residuals(fit))
+```
+
+ACF looks good. Let's try the Portmanteau test.
+
+```{r}
+Box.test(residuals(fit), lag=24, fitdf=4, type='Ljung')
+```
+
+p-value is large so just white noise.
+
+Recommended lag is 10 for non-seasonal data and $2m$ for seasonal where $m$ is
+a period of seasonality. This can't be too large, so if larger than $T/5$ where
+$T$ is the number of observations, the just use $T/5$.
+
+`fitdf` is just the sum of $p$ and $q$.
+
+### Step 7: Forecast
+
+```{r}
+plot(forecast(fit))
+```
+
+`auto.arima()` would have returned the same thing.
+
+```{r}
+auto.arima(x1, seasonal=FALSE)
+```
